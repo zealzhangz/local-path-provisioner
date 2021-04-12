@@ -1,7 +1,7 @@
 pipeline {
   agent {
     node {
-      label 'go'
+      label 'maven'
     }
   }
 
@@ -14,16 +14,14 @@ pipeline {
     stages {
         stage ('checkout scm') {
             steps {
-                container('maven') {
-                  git url: 'git@github.com:zealzhangz/local-path-provisioner.git'
-                }
+                checkout(scm)
             }
         }
 
         stage ('build & push') {
             steps {
-                container ('go') {
-                    #sh 'go build'
+                container ('maven') {
+                    //sh 'go build'
                     sh 'docker build -f `pwd`/package/Dockerfile -t $REGISTRY/$HARBOR_NAMESPACE/local-path-provisioner:v0.20.$BUILD_NUMBER .'
                     withCredentials([usernamePassword(passwordVariable : 'DOCKER_PASSWORD' ,usernameVariable : 'DOCKER_USERNAME' ,credentialsId : "$DOCKER_CREDENTIAL_ID" ,)]) {
                         sh 'echo "$DOCKER_PASSWORD" | docker login $REGISTRY -u "$DOCKER_USERNAME" --password-stdin'
